@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Counter animation for stats ---
-  const counterElements = document.querySelectorAll('.stat-number');
+  const counterElements = document.querySelectorAll('.stat-number[data-count]');
   if (counterElements.length > 0) {
     const counterObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
