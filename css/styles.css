@@ -239,6 +239,7 @@ p {
   color: var(--white);
   border: 2px solid rgba(255,255,255,0.4);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .btn-secondary:hover {
@@ -712,11 +713,6 @@ p {
 .page-hero .section-label::before,
 .page-hero .section-label::after {
   background: rgba(var(--gold-rgb), 0.5);
-}
-
-.page-hero .divider {
-  position: relative;
-  z-index: 2;
 }
 
 /* --- Stats Section --- */
@@ -2223,6 +2219,11 @@ p {
   box-shadow: var(--shadow-xl);
 }
 
+.pricing-card.pricing-switching {
+  transform: scale(0.97);
+  opacity: 0.7;
+}
+
 .pricing-card.featured {
   border-color: var(--gold);
   box-shadow: var(--shadow-lg), 0 0 0 1px rgba(var(--gold-rgb), 0.1);
@@ -2873,6 +2874,7 @@ p {
   visibility: hidden;
   transition: all var(--transition);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .mobile-overlay.active {
