@@ -298,9 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.pricing-card').forEach(card => {
           const regularPrice = card.querySelector('.regular-price');
           const summerPrice = card.querySelector('.summer-price');
-          // Add a subtle scale animation on switch
-          card.style.transform = 'scale(0.97)';
-          card.style.opacity = '0.7';
+          card.classList.add('pricing-switching');
           setTimeout(() => {
             if (mode === 'summer') {
               if (regularPrice) regularPrice.style.display = 'none';
@@ -309,64 +307,11 @@ document.addEventListener('DOMContentLoaded', () => {
               if (regularPrice) regularPrice.style.display = 'block';
               if (summerPrice) summerPrice.style.display = 'none';
             }
-            card.style.transform = 'scale(1)';
-            card.style.opacity = '1';
+            card.classList.remove('pricing-switching');
           }, 200);
         });
       });
     });
-  }
-
-  // --- Testimonial slider with touch support ---
-  const testimonials = document.querySelectorAll('.testimonial-card');
-  const dots = document.querySelectorAll('.testimonial-dot');
-  if (testimonials.length > 0) {
-    let currentSlide = 0;
-    let slideInterval;
-    let touchStartTestimonial = 0;
-
-    function showSlide(index) {
-      testimonials.forEach(t => t.classList.remove('active'));
-      dots.forEach(d => d.classList.remove('active'));
-      testimonials[index].classList.add('active');
-      if (dots[index]) dots[index].classList.add('active');
-      currentSlide = index;
-    }
-
-    function nextSlide() {
-      showSlide((currentSlide + 1) % testimonials.length);
-    }
-
-    slideInterval = setInterval(nextSlide, 5000);
-
-    dots.forEach((dot, index) => {
-      dot.addEventListener('click', () => {
-        clearInterval(slideInterval);
-        showSlide(index);
-        slideInterval = setInterval(nextSlide, 5000);
-      });
-    });
-
-    // Touch swipe for testimonials
-    const sliderContainer = document.querySelector('.testimonials-slider');
-    if (sliderContainer) {
-      sliderContainer.addEventListener('touchstart', (e) => {
-        touchStartTestimonial = e.changedTouches[0].screenX;
-      }, { passive: true });
-
-      sliderContainer.addEventListener('touchend', (e) => {
-        const diff = touchStartTestimonial - e.changedTouches[0].screenX;
-        if (Math.abs(diff) > 50) {
-          clearInterval(slideInterval);
-          if (diff > 0) {
-            showSlide((currentSlide + 1) % testimonials.length);
-          } else {
-            showSlide((currentSlide - 1 + testimonials.length) % testimonials.length);
-          }
-          slideInterval = setInterval(nextSlide, 5000);
-        }
-      }, { passive: true });
-    }
   }
 
   // --- Newsletter form ---
@@ -376,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const input = form.querySelector('input');
       const success = form.parentElement.querySelector('.newsletter-success');
-      if (input && input.value.trim()) {
+      if (input && input.value.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim())) {
         if (success) {
           success.style.display = 'block';
           success.textContent = 'Thank you!';
@@ -385,6 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           if (success) success.style.display = 'none';
         }, 3000);
+      } else if (input) {
+        input.style.borderColor = '#e74c3c';
+        setTimeout(() => { input.style.borderColor = ''; }, 2000);
       }
     });
   });
@@ -408,9 +356,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const email = bookingForm.querySelector('[name="email"]');
-      if (email && email.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+      if (email && (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value))) {
         email.classList.add('error');
         const err = email.parentElement.querySelector('.form-error');
+        if (err) err.style.display = 'block';
+        isValid = false;
+      }
+
+      const phone = bookingForm.querySelector('[name="phone"]');
+      if (phone && !phone.value.trim()) {
+        phone.classList.add('error');
+        const err = phone.parentElement.querySelector('.form-error');
         if (err) err.style.display = 'block';
         isValid = false;
       }
@@ -423,25 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
-  }
-
-  // --- Lazy loading images ---
-  const lazyImages = document.querySelectorAll('img[data-src]');
-  if (lazyImages.length > 0) {
-    const imgObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.getAttribute('data-src');
-          img.removeAttribute('data-src');
-          imgObserver.unobserve(img);
-        }
-      });
-    }, {
-      rootMargin: '200px'
-    });
-
-    lazyImages.forEach(img => imgObserver.observe(img));
   }
 
   // --- Magnetic effect on primary buttons (desktop only) ---
