@@ -19,11 +19,10 @@
     }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/page1.html" },
-    { "source": "/furnished-apartment-facilities-mississauga", "destination": "/page2.html" },
-    { "source": "/furnished-apartments-mississauga-location", "destination": "/page3.html" },
-    { "source": "/mississauga-furnished-apartment-photos", "destination": "/page4.html" },
-    { "source": "/furnished-apartment-prices-mississauga", "destination": "/page5.html" },
-    { "source": "/book-furnished-apartment-mississauga", "destination": "/page6.html" }
+    { "source": "/facilities", "destination": "/facilities.html" },
+    { "source": "/location", "destination": "/location.html" },
+    { "source": "/gallery", "destination": "/gallery.html" },
+    { "source": "/pricing", "destination": "/pricing.html" },
+    { "source": "/booking", "destination": "/booking.html" }
   ]
 }
