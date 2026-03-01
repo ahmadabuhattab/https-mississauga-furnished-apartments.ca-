@@ -1,0 +1,29 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=86400"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/", "destination": "/page1.html" },
+    { "source": "/furnished-apartment-facilities-mississauga", "destination": "/page2.html" },
+    { "source": "/furnished-apartments-mississauga-location", "destination": "/page3.html" },
+    { "source": "/mississauga-furnished-apartment-photos", "destination": "/page4.html" },
+    { "source": "/furnished-apartment-prices-mississauga", "destination": "/page5.html" },
+    { "source": "/book-furnished-apartment-mississauga", "destination": "/page6.html" }
+  ]
+}
