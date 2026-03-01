@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <url>
+    <loc>https://mississauga-furnished-apartments.ca/</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=756,fit=crop,f=jpeg/ALpO9k4QVlsZ2wb2/whatsapp-image-2024-09-22-at-12.25.36-pm-2-d95KN5geLQuXe1zx.jpeg</image:loc>
+      <image:title>Mississauga Furnished Apartments - Luxury Short-Term Rentals</image:title>
+      <image:caption>Fully furnished condo apartments for short-term rent near Square One in Mississauga</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://mississauga-furnished-apartments.ca/booking.html</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://mississauga-furnished-apartments.ca/pricing.html</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://mississauga-furnished-apartments.ca/facilities.html</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://mississauga-furnished-apartments.ca/gallery.html</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=768,h=768,fit=crop/ALpO9k4QVlsZ2wb2/whatsapp-image-2024-09-22-at-12.25.35-pm-mp8vB89kgesa10GK.jpeg</image:loc>
+      <image:title>Furnished apartment living room in Mississauga</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=768,h=768,fit=crop/ALpO9k4QVlsZ2wb2/whatsapp-image-2024-09-22-at-12.25.35-pm-1-A1awVaJy3QTWo8v8.jpeg</image:loc>
+      <image:title>Modern bedroom in Mississauga short-term rental</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=768,h=768,fit=crop/ALpO9k4QVlsZ2wb2/whatsapp-image-2024-09-22-at-12.25.36-pm-1-AzGeaG7n04c05wrJ.jpeg</image:loc>
+      <image:title>Fully equipped kitchen in Mississauga furnished condo</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=768,h=768,fit=crop/ALpO9k4QVlsZ2wb2/whatsapp-image-2024-09-22-at-12.25.36-pm-2-d95KN5geLQuXe1zx.jpeg</image:loc>
+      <image:title>Three-bedroom furnished suite in Mississauga</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://mississauga-furnished-apartments.ca/location.html</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>
