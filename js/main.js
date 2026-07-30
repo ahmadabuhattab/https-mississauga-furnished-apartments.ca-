@@ -340,45 +340,54 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Booking form validation ---
   const bookingForm = document.querySelector('.booking-form form');
   if (bookingForm) {
-    bookingForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      let isValid = true;
+    const successMsg = bookingForm.parentElement.querySelector('.form-success');
+    const reservationWasSent = new URLSearchParams(window.location.search).get('reservation') === 'sent';
 
-      bookingForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-      bookingForm.querySelectorAll('.form-error').forEach(el => el.style.display = 'none');
+    if (reservationWasSent && successMsg) {
+      bookingForm.style.display = 'none';
+      successMsg.style.display = 'block';
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+      bookingForm.addEventListener('submit', (e) => {
+        let isValid = true;
 
-      const name = bookingForm.querySelector('[name="name"]');
-      if (name && !name.value.trim()) {
-        name.classList.add('error');
-        const err = name.parentElement.querySelector('.form-error');
-        if (err) err.style.display = 'block';
-        isValid = false;
-      }
+        bookingForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+        bookingForm.querySelectorAll('.form-error').forEach(el => el.style.display = 'none');
 
-      const email = bookingForm.querySelector('[name="email"]');
-      if (email && (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value))) {
-        email.classList.add('error');
-        const err = email.parentElement.querySelector('.form-error');
-        if (err) err.style.display = 'block';
-        isValid = false;
-      }
-
-      const phone = bookingForm.querySelector('[name="phone"]');
-      if (phone && !phone.value.trim()) {
-        phone.classList.add('error');
-        const err = phone.parentElement.querySelector('.form-error');
-        if (err) err.style.display = 'block';
-        isValid = false;
-      }
-
-      if (isValid) {
-        const successMsg = bookingForm.parentElement.querySelector('.form-success');
-        if (successMsg) {
-          bookingForm.style.display = 'none';
-          successMsg.style.display = 'block';
+        const name = bookingForm.querySelector('[name="name"]');
+        if (name && !name.value.trim()) {
+          name.classList.add('error');
+          const err = name.parentElement.querySelector('.form-error');
+          if (err) err.style.display = 'block';
+          isValid = false;
         }
-      }
-    });
+
+        const email = bookingForm.querySelector('[name="email"]');
+        if (email && (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value))) {
+          email.classList.add('error');
+          const err = email.parentElement.querySelector('.form-error');
+          if (err) err.style.display = 'block';
+          isValid = false;
+        }
+
+        const phone = bookingForm.querySelector('[name="phone"]');
+        if (phone && !phone.value.trim()) {
+          phone.classList.add('error');
+          isValid = false;
+        }
+
+        if (!isValid) {
+          e.preventDefault();
+          return;
+        }
+
+        const submitButton = bookingForm.querySelector('[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'Sending...';
+        }
+      });
+    }
   }
 
   // --- Magnetic effect on primary buttons (desktop only) ---
