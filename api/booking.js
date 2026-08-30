@@ -1,7 +1,5 @@
-const TO = [
-  'mississuga.furnished.apartments@gmail.com',
-  'a.abuhattab21@gmail.com',
-];
+const DAD = 'mississuga.furnished.apartments@gmail.com';
+const YOU = 'a.abuhattab21@gmail.com';
 const BOOKING = '/booking';
 const SUCCESS = '/booking?reservation=sent';
 
@@ -9,6 +7,18 @@ function field(body, key) {
   const value = body[key];
   if (Array.isArray(value)) return String(value[0] || '').trim();
   return String(value || '').trim();
+}
+
+async function sendEmail(apiKey, payload) {
+  const send = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  return send.ok;
 }
 
 export default async function handler(req, res) {
@@ -60,23 +70,27 @@ export default async function handler(req, res) {
     ['Message', field(body, 'message')],
   ];
   const text = rows.map(([label, value]) => `${label}: ${value}`).join('\n');
+  const subject = 'New reservation request from Mississauga Furnished Apartments';
 
-  const send = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: 'Mississauga Furnished Apartments <bookings@mississauga-furnished-apartments.ca>',
-      to: TO,
-      reply_to: email,
-      subject: 'New reservation request from Mississauga Furnished Apartments',
-      text,
-    }),
+  // Resend's test sender can only mail YOUR Gmail until the domain is Verified.
+  const toYou = await sendEmail(apiKey, {
+    from: 'Mississauga Furnished Apartments <onboarding@resend.dev>',
+    to: [YOU],
+    reply_to: email,
+    subject,
+    text,
   });
 
-  if (!send.ok) {
+  // Dad (and a second copy to you) once the domain verifies; ignore failure until then.
+  await sendEmail(apiKey, {
+    from: 'Mississauga Furnished Apartments <bookings@mississauga-furnished-apartments.ca>',
+    to: [DAD, YOU],
+    reply_to: email,
+    subject,
+    text,
+  });
+
+  if (!toYou) {
     res.statusCode = 502;
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.end('Could not send reservation email');
