@@ -1,0 +1,323 @@
+/* Check-in / check-out range calendar — matches ELITE v2 navy/gold */
+
+.date-range {
+  margin-bottom: 22px;
+}
+
+.date-range__fields {
+  margin-bottom: 0;
+}
+
+.date-range__field {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(var(--navy-rgb), 0.12);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--charcoal);
+  font-family: 'Inter', sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.date-range__field:hover {
+  border-color: var(--gold-light);
+}
+
+.date-range__field:focus-visible {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(var(--gold-rgb), 0.08);
+}
+
+.date-range__field.is-active {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(var(--gold-rgb), 0.08);
+}
+
+.date-range__field.is-filled .date-range__value {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.date-range__icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--gold);
+}
+
+.date-range__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.date-range__eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.date-range__value {
+  font-size: 0.95rem;
+  color: var(--text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date-range__meta {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.2px;
+}
+
+.date-range__panel {
+  margin-top: 14px;
+  padding: 22px 20px 16px;
+  background: var(--off-white);
+  border: 1px solid rgba(var(--navy-rgb), 0.06);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.date-range__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.date-range__nav-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--navy);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.date-range__nav-btn:hover:not(:disabled) {
+  background: var(--navy);
+  color: var(--gold);
+}
+
+.date-range__nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.date-range__months {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.date-range__month-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+  margin: 0 0 14px;
+}
+
+.date-range__weekdays,
+.date-range__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.date-range__weekdays span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.date-range__day {
+  position: relative;
+  height: 42px;
+  border: none;
+  background: transparent;
+  color: var(--charcoal);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.date-range__day::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  z-index: -1;
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.date-range__day:hover:not(:disabled):not(.is-start):not(.is-end)::before {
+  background: rgba(var(--gold-rgb), 0.16);
+}
+
+.date-range__day.is-today {
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.date-range__day.is-today::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+  transform: translateX(-50%);
+}
+
+.date-range__day.is-in-range {
+  background: rgba(var(--gold-rgb), 0.14);
+}
+
+.date-range__day.is-in-range.is-range-start {
+  background: linear-gradient(90deg, transparent 50%, rgba(var(--gold-rgb), 0.14) 50%);
+}
+
+.date-range__day.is-in-range.is-range-end {
+  background: linear-gradient(90deg, rgba(var(--gold-rgb), 0.14) 50%, transparent 50%);
+}
+
+.date-range__day.is-start,
+.date-range__day.is-end {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.date-range__day.is-start::before,
+.date-range__day.is-end::before {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  box-shadow: 0 4px 12px rgba(var(--gold-rgb), 0.35);
+}
+
+.date-range__day:disabled {
+  color: var(--medium-gray);
+  cursor: default;
+}
+
+.date-range__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(var(--navy-rgb), 0.06);
+}
+
+.date-range__hint {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.date-range__clear {
+  border: none;
+  background: none;
+  color: var(--navy);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+
+.date-range__clear:hover {
+  color: var(--gold-dark);
+}
+
+@media (max-width: 720px) {
+  .date-range__months {
+    grid-template-columns: 1fr;
+  }
+
+  .date-range__month + .date-range__month {
+    display: none;
+  }
+
+  .date-range__panel {
+    padding: 18px 12px 14px;
+  }
+
+  .date-range__day {
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .date-range__field,
+  .date-range__nav-btn,
+  .date-range__day::before {
+    transition: none;
+  }
+}
+
+.date-range__board {
+  position: relative;
+}
+
+.date-range__nav-btn--prev,
+.date-range__nav-btn--next {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+}
+
+.date-range__nav-btn--prev { left: 0; }
+.date-range__nav-btn--next { right: 0; }
+
+.date-range__month-title {
+  padding: 8px 44px 0;
+}
+
+.date-range__blank {
+  height: 42px;
+}
+
+.date-range__grid {
+  gap: 0;
+}
+
+.date-range .form-group {
+  margin-bottom: 0;
+}
+
+@media (max-width: 720px) {
+  .date-range__blank,
+  .date-range__day {
+    height: 44px;
+  }
+}
