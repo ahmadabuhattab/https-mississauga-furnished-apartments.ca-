@@ -3,6 +3,40 @@
    $300K Luxury Hospitality Design System
    ============================================ */
 
+/* --- Self-hosted variable fonts (no third-party requests) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/inter-var-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/inter-var-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700 800;
+  font-display: swap;
+  src: url('/fonts/playfair-var-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700 800;
+  font-display: swap;
+  src: url('/fonts/playfair-var-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* --- CSS Variables --- */
 :root {
   --navy: #0B1D3A;
@@ -55,12 +89,30 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  opacity: 0;
-  transition: opacity 0.4s ease;
 }
 
-body.page-loaded {
-  opacity: 1;
+/* Skip link (keyboard accessibility) */
+.skip-link {
+  position: absolute;
+  top: -60px;
+  left: 16px;
+  z-index: 2000;
+  background: var(--navy);
+  color: var(--white);
+  padding: 12px 22px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 16px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
 }
 
 /* Custom scrollbar */
@@ -401,6 +453,8 @@ p {
   cursor: pointer;
   padding: 8px;
   z-index: 1001;
+  background: none;
+  border: none;
 }
 
 .hamburger span {
@@ -490,10 +544,19 @@ p {
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   will-change: transform;
+}
+
+/* Pre-scale hero image so the parallax effect never "jumps" on first scroll */
+.hero .hero-bg {
+  transform: scale(1.1);
 }
 
 .hero-overlay {
@@ -672,6 +735,10 @@ p {
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   background-size: cover;
   background-position: center;
   will-change: transform;
@@ -1494,8 +1561,11 @@ p {
   height: 20px;
 }
 
-/* --- Scroll Animations --- */
-.fade-up {
+/* --- Scroll Animations ---
+   Hidden states are gated behind html.js (zero-specificity :where)
+   so all content stays fully visible for crawlers and users
+   without JavaScript. */
+:where(html.js) .fade-up {
   opacity: 0;
   transform: translateY(40px);
   transition: opacity 0.7s ease, transform 0.7s ease;
@@ -1506,7 +1576,7 @@ p {
   transform: translateY(0);
 }
 
-.fade-in {
+:where(html.js) .fade-in {
   opacity: 0;
   transition: opacity 0.7s ease;
 }
@@ -1526,7 +1596,7 @@ p {
 .stagger-children .fade-up:nth-child(8) { transition-delay: 0.4s; }
 
 /* Stagger children - general (for grids without .fade-up on children) */
-.stagger-children > * {
+:where(html.js) .stagger-children > * {
   opacity: 0;
   transform: translateY(25px);
   transition: opacity 0.6s ease, transform 0.6s ease;
@@ -1551,11 +1621,11 @@ p {
 .stagger-children.visible > *:nth-child(n+14) { transition-delay: 0.68s; }
 
 /* Override: children with .fade-up handle their own visibility */
-.stagger-children > .fade-up {
+:where(html.js) .stagger-children > .fade-up {
   opacity: 0;
   transform: translateY(25px);
 }
-.stagger-children > .fade-up.visible {
+:where(html.js) .stagger-children > .fade-up.visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -2970,6 +3040,145 @@ p {
   border-width: 0;
 }
 
+/* --- FAQ Accordion --- */
+.faq-list {
+  max-width: 820px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+.faq-item {
+  background: var(--white);
+  border: 1px solid rgba(var(--navy-rgb), 0.07);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition), border-color var(--transition);
+  overflow: hidden;
+}
+
+.faq-item:hover {
+  border-color: rgba(var(--gold-rgb), 0.4);
+  box-shadow: var(--shadow-md);
+}
+
+.faq-item[open] {
+  border-color: rgba(var(--gold-rgb), 0.5);
+  box-shadow: var(--shadow-md);
+}
+
+.faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 26px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--navy);
+  list-style: none;
+  transition: color var(--transition);
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary:hover {
+  color: var(--gold-dark);
+}
+
+.faq-item .faq-chevron {
+  width: 22px;
+  height: 22px;
+  color: var(--gold);
+  flex-shrink: 0;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  padding: 0 26px 24px;
+}
+
+.faq-answer p {
+  margin-bottom: 0;
+  line-height: 1.85;
+  color: var(--text-body);
+  font-size: 0.95rem;
+}
+
+/* Smooth open/close where supported (Chromium 131+), instant elsewhere */
+.faq-item::details-content {
+  opacity: 0;
+  block-size: 0;
+  overflow: hidden;
+  transition: content-visibility 0.35s allow-discrete, opacity 0.35s ease, block-size 0.35s ease;
+}
+
+.faq-item[open]::details-content {
+  opacity: 1;
+  block-size: auto;
+}
+
+@supports (interpolate-size: allow-keywords) {
+  .faq-list {
+    interpolate-size: allow-keywords;
+  }
+}
+
+@media (max-width: 580px) {
+  .faq-item summary {
+    padding: 18px 20px;
+    font-size: 0.95rem;
+  }
+  .faq-answer {
+    padding: 0 20px 20px;
+  }
+}
+
+/* --- Cross-document view transitions (instant, app-like navigation) --- */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.25s;
+}
+
+/* --- Reduced motion: respect user preference --- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  :where(html.js) .fade-up,
+  :where(html.js) .fade-in,
+  :where(html.js) .stagger-children > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 /* --- Performance hints --- */
 .hero-bg,
 .page-hero .hero-bg,
@@ -2982,4 +3191,9 @@ p {
 .whatsapp-float,
 .scroll-top {
   will-change: transform, opacity;
+}
+
+.footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 620px;
 }

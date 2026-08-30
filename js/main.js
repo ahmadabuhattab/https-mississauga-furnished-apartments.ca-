@@ -5,8 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // --- Smooth page entrance ---
-  document.body.classList.add('page-loaded');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // --- Header scroll effect with glassmorphism ---
   const header = document.querySelector('.header');
@@ -46,26 +45,24 @@ document.addEventListener('DOMContentLoaded', () => {
     hamburger.addEventListener('click', () => {
       hamburger.classList.toggle('active');
       navMenu.classList.toggle('open');
+      const isOpen = navMenu.classList.contains('open');
+      hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       if (overlay) overlay.classList.toggle('active');
-      document.body.style.overflow = navMenu.classList.contains('open') ? 'hidden' : '';
+      document.body.style.overflow = isOpen ? 'hidden' : '';
     });
 
-    if (overlay) {
-      overlay.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('open');
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
-      });
-    }
+    const closeMenu = () => {
+      hamburger.classList.remove('active');
+      hamburger.setAttribute('aria-expanded', 'false');
+      navMenu.classList.remove('open');
+      if (overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    if (overlay) overlay.addEventListener('click', closeMenu);
 
     navMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('open');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-      });
+      link.addEventListener('click', closeMenu);
     });
   }
 
@@ -155,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const heroSection = document.querySelector('.hero');
   const heroBg = heroSection ? heroSection.querySelector('.hero-bg') : null;
 
-  if (heroBg) {
+  if (heroBg && !prefersReducedMotion) {
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY;
       const heroHeight = heroSection.offsetHeight;
@@ -200,6 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return img ? img.getAttribute('data-full') || img.src : '';
     });
 
+    function preloadImage(index) {
+      const src = images[(index + images.length) % images.length];
+      if (src) {
+        const img = new Image();
+        img.src = src;
+      }
+    }
+
     function showImage(index) {
       currentIndex = index;
       if (lightboxImg) {
@@ -212,6 +217,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 150);
       }
       if (lightboxCounter) lightboxCounter.textContent = (index + 1) + ' / ' + images.length;
+      // Warm up neighbours so next/prev feel instant
+      preloadImage(index + 1);
+      preloadImage(index - 1);
     }
 
     galleryItems.forEach((item, index) => {
@@ -391,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Magnetic effect on primary buttons (desktop only) ---
-  if (window.matchMedia('(hover: hover)').matches) {
+  if (window.matchMedia('(hover: hover)').matches && !prefersReducedMotion) {
     const magneticBtns = document.querySelectorAll('.btn-primary, .btn-book');
     magneticBtns.forEach(btn => {
       btn.addEventListener('mousemove', (e) => {
@@ -408,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Smooth reveal for hero content ---
   const heroContent = document.querySelector('.hero .hero-content');
-  if (heroContent) {
+  if (heroContent && !prefersReducedMotion) {
     const children = heroContent.children;
     Array.from(children).forEach((child, i) => {
       child.style.opacity = '0';
@@ -421,13 +429,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Active nav link highlight ---
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  // --- Active nav link highlight (supports clean URLs and .html paths) ---
+  const normalizePath = (path) => {
+    let p = (path || '').split(/[?#]/)[0];
+    if (!p.startsWith('/')) p = '/' + p;
+    p = p.replace(/\.html$/, '').replace(/\/index$/, '/');
+    if (p.length > 1) p = p.replace(/\/+$/, '');
+    return p || '/';
+  };
+  const currentPath = normalizePath(window.location.pathname);
   document.querySelectorAll('.header-nav a').forEach(link => {
-    const href = link.getAttribute('href');
-    if (href === currentPage) {
+    if (normalizePath(link.getAttribute('href')) === currentPath) {
       link.classList.add('active');
     }
   });
+
+  // --- Hover prefetch fallback for browsers without the Speculation Rules API ---
+  const supportsSpeculation = typeof HTMLScriptElement !== 'undefined' &&
+    typeof HTMLScriptElement.supports === 'function' &&
+    HTMLScriptElement.supports('speculationrules');
+
+  if (!supportsSpeculation) {
+    const prefetched = new Set();
+    document.addEventListener('mouseover', (e) => {
+      const link = e.target.closest ? e.target.closest('a[href]') : null;
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+      if (link.origin !== window.location.origin) return;
+      const url = link.pathname;
+      if (prefetched.has(url) || url === window.location.pathname) return;
+      prefetched.add(url);
+      const hint = document.createElement('link');
+      hint.rel = 'prefetch';
+      hint.href = url;
+      document.head.appendChild(hint);
+    }, { passive: true });
+  }
 
 });
