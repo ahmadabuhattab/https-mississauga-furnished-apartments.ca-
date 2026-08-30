@@ -35,8 +35,10 @@
   <link rel="preload" href="/fonts/playfair-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/styles.css?v=3">
+  <link rel="stylesheet" href="/css/date-range.css">
   <script>document.documentElement.classList.add('js');</script>
   <script src="/js/main.js?v=3" defer></script>
+  <script src="/js/date-range.js" defer></script>
   <script type="speculationrules">
   {
     "prerender": [{ "where": { "href_matches": "/*" }, "eagerness": "moderate" }],
@@ -183,15 +185,27 @@
             </div>
 
             <!-- Check-in & Check-out -->
-            <div class="form-row">
-              <div class="form-group">
-                <label>Check-In Date</label>
-                <input type="text" name="checkin" placeholder="Example: Dec 17">
+            <div class="date-range" data-date-range>
+              <div class="form-row date-range__fields">
+                <div class="form-group">
+                  <label for="checkin-trigger">Check-In Date</label>
+                  <button type="button" class="date-range__field" id="checkin-trigger" data-role="checkin" aria-haspopup="dialog" aria-expanded="false" aria-controls="date-range-panel">
+                    <svg class="date-range__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                    <span class="date-range__value" data-display="checkin">Add date</span>
+                  </button>
+                  <input type="hidden" name="checkin" value="" autocomplete="off">
+                </div>
+                <div class="form-group">
+                  <label for="checkout-trigger">Check-Out Date</label>
+                  <button type="button" class="date-range__field" id="checkout-trigger" data-role="checkout" aria-haspopup="dialog" aria-expanded="false" aria-controls="date-range-panel">
+                    <svg class="date-range__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                    <span class="date-range__value" data-display="checkout">Add date</span>
+                  </button>
+                  <input type="hidden" name="checkout" value="" autocomplete="off">
+                </div>
               </div>
-              <div class="form-group">
-                <label>Check-Out Date</label>
-                <input type="text" name="checkout" placeholder="Example: Jan 17">
-              </div>
+              <p class="date-range__meta" data-nights hidden></p>
+              <div class="date-range__panel" id="date-range-panel" data-panel hidden role="dialog" aria-label="Choose stay dates"></div>
             </div>
 
             <!-- Message -->
