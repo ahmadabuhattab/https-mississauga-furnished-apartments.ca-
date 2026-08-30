@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Mississauga Furnished Apartments <beth.t@example.com>',
+      from: 'Mississauga Furnished Apartments <bookings@mississauga-furnished-apartments.ca>',
       to: TO,
       reply_to: email,
       subject: 'New reservation request from Mississauga Furnished Apartments',
