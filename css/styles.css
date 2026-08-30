@@ -3126,7 +3126,7 @@ p {
 }
 
 @supports (interpolate-size: allow-keywords) {
-  :root {
+  .faq-list {
     interpolate-size: allow-keywords;
   }
 }
