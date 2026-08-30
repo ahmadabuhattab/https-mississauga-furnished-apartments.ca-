@@ -129,12 +129,8 @@
         <div class="booking-form">
           <h3>Make a Reservation</h3>
 
-          <form action="https://formsubmit.co/mississuga.furnished.apartments@gmail.com" method="POST" accept-charset="UTF-8">
-            <input type="hidden" name="_subject" value="New reservation request from Mississauga Furnished Apartments">
-            <input type="hidden" name="_template" value="table">
-            <input type="hidden" name="_next" value="https://mississauga-furnished-apartments.ca/booking?reservation=sent">
+          <form action="/api/booking" method="POST" accept-charset="UTF-8">
             <input type="text" name="_honey" tabindex="-1" autocomplete="off" style="display: none;">
-            <input type="hidden" name="_captcha" value="false">
 
             <!-- Suite Size -->
             <div class="form-group">
