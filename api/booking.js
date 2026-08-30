@@ -1,4 +1,7 @@
-const TO = 'mississuga.furnished.apartments@gmail.com';
+const TO = [
+  'mississuga.furnished.apartments@gmail.com',
+  'a.abuhattab21@gmail.com',
+];
 const BOOKING = '/booking';
 const SUCCESS = '/booking?reservation=sent';
 
@@ -66,7 +69,7 @@ export default async function handler(req, res) {
     },
     body: JSON.stringify({
       from: 'Mississauga Furnished Apartments <beth.t@example.com>',
-      to: [TO],
+      to: TO,
       reply_to: email,
       subject: 'New reservation request from Mississauga Furnished Apartments',
       text,
