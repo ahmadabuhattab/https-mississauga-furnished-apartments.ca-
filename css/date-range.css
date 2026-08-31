@@ -271,10 +271,6 @@
     grid-template-columns: 1fr;
   }
 
-  .date-range__month + .date-range__month {
-    display: none;
-  }
-
   .date-range__panel {
     padding: 18px 12px 14px;
   }
@@ -290,6 +286,25 @@
   .date-range__day::before {
     transition: none;
   }
+}
+
+
+.date-range__mode {
+  margin: 0 0 14px;
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.date-range__mode.is-checkin {
+  color: #1F8A4C;
+}
+
+.date-range__mode.is-checkout {
+  color: #C44536;
 }
 
 .date-range__board {
