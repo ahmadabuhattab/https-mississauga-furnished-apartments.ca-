@@ -44,7 +44,7 @@ export default async function handler(req, res) {
   const name = field(body, 'name');
   const email = field(body, 'email');
   const phone = field(body, 'phone');
-  if (!name || !email || !phone || !/[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!name || !email || !phone || !/^[^^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     res.statusCode = 400;
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.end('Missing required fields');
