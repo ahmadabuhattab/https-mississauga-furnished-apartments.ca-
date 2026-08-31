@@ -44,7 +44,7 @@ export default async function handler(req, res) {
   const name = field(body, 'name');
   const email = field(body, 'email');
   const phone = field(body, 'phone');
-  if (!name || !email || !phone || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!name || !email || !phone || !/[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     res.statusCode = 400;
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.end('Missing required fields');
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
   const text = rows.map(([label, value]) => `${label}: ${value}`).join('\n');
   const subject = 'New reservation request from Mississauga Furnished Apartments';
 
-  // Resend's test sender can only mail YOUR Gmail until the domain is Verified.
+  // Ahmad's copy — keep this path exactly as it works today.
   const toYou = await sendEmail(apiKey, {
     from: 'Mississauga Furnished Apartments <onboarding@resend.dev>',
     to: [YOU],
@@ -81,10 +81,10 @@ export default async function handler(req, res) {
     text,
   });
 
-  // Dad (and a second copy to you) once the domain verifies; ignore failure until then.
+  // Dad's copy from the verified domain. Do not CC Ahmad here (he already got his).
   await sendEmail(apiKey, {
     from: 'Mississauga Furnished Apartments <bookings@mississauga-furnished-apartments.ca>',
-    to: [DAD, YOU],
+    to: [DAD],
     reply_to: email,
     subject,
     text,
