@@ -21,6 +21,10 @@
   const nice = (key) =>
     fromKey(key).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' });
   const nightCount = (a, b) => Math.round((b - a) / 86400000);
+  const eventInside = (e, el) => {
+    const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+    return path.includes(el) || (e.target && el.contains(e.target));
+  };
 
   function monthGrid(year, month) {
     const first = new Date(year, month, 1);
@@ -48,8 +52,13 @@
     let view = new Date(startOfToday().getFullYear(), startOfToday().getMonth(), 1);
     let hover = null;
     let open = false;
+    let ignoreCloseUntil = 0;
 
     const rangeEnd = () => checkout || (checkin && hover && hover > checkin ? hover : null);
+
+    const bumpIgnore = () => {
+      ignoreCloseUntil = Date.now() + 700;
+    };
 
     const setOpen = (next, role) => {
       open = next;
@@ -65,6 +74,16 @@
         }
         render();
       }
+    };
+
+    const syncMode = () => {
+      const mode = panel.querySelector('[data-mode]');
+      if (!mode) return;
+      const isOut = selecting === 'checkout';
+      mode.textContent = isOut ? 'Check-out' : 'Check-in';
+      mode.classList.toggle('is-checkin', !isOut);
+      mode.classList.toggle('is-checkout', isOut);
+      panel.setAttribute('aria-label', isOut ? 'Choose check-out date' : 'Choose check-in date');
     };
 
     const syncFields = () => {
@@ -88,6 +107,7 @@
       }
       const clearBtn = panel.querySelector('[data-clear]');
       if (clearBtn) clearBtn.hidden = !checkin;
+      syncMode();
     };
 
     const paintDays = () => {
@@ -165,7 +185,9 @@
       const next = addMonths(view, 1);
       const minView = new Date(startOfToday().getFullYear(), startOfToday().getMonth(), 1);
       const prevDisabled = view <= minView ? 'disabled' : '';
+      const isOut = selecting === 'checkout';
       panel.innerHTML = `
+        <p class="date-range__mode ${isOut ? 'is-checkout' : 'is-checkin'}" data-mode>${isOut ? 'Check-out' : 'Check-in'}</p>
         <div class="date-range__board">
           <button type="button" class="date-range__nav-btn date-range__nav-btn--prev" data-nav="-1" aria-label="Previous month" ${prevDisabled}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -186,14 +208,29 @@
       paintDays();
     }
 
+    const goMonth = (delta) => {
+      bumpIgnore();
+      view = addMonths(view, delta);
+      render();
+    };
+
+    panel.addEventListener('pointerup', (e) => {
+      const nav = e.target.closest('[data-nav]');
+      if (!nav || nav.disabled) return;
+      e.preventDefault();
+      e.stopPropagation();
+      goMonth(Number(nav.getAttribute('data-nav')));
+    });
+
     panel.addEventListener('click', (e) => {
+      e.stopPropagation();
       const nav = e.target.closest('[data-nav]');
       if (nav) {
-        view = addMonths(view, Number(nav.getAttribute('data-nav')));
-        render();
+        e.preventDefault();
         return;
       }
       if (e.target.closest('[data-clear]')) {
+        bumpIgnore();
         clear();
         return;
       }
@@ -202,6 +239,7 @@
     });
 
     panel.addEventListener('pointerover', (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
       const dayBtn = e.target.closest('[data-day]');
       if (!dayBtn || dayBtn.disabled || !checkin || checkout) return;
       const day = fromKey(dayBtn.getAttribute('data-day'));
@@ -213,16 +251,21 @@
 
     checkinBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      bumpIgnore();
       setOpen(!(open && selecting === 'checkin'), 'checkin');
     });
     checkoutBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      bumpIgnore();
       const role = checkin ? 'checkout' : 'checkin';
       setOpen(!(open && selecting === role), role);
     });
 
     document.addEventListener('click', (e) => {
-      if (open && !root.contains(e.target)) setOpen(false);
+      if (!open) return;
+      if (Date.now() < ignoreCloseUntil) return;
+      if (eventInside(e, root)) return;
+      setOpen(false);
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && open) {
