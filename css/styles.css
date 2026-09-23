@@ -3340,6 +3340,8 @@ h2 { font-size: clamp(2rem, 3.7vw, 3.35rem); line-height: 1.16; }
 .suite-card-specs svg { color: #8c722d; }
 .suite-card-price { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 0; }
 .suite-card-price span { display: block; font-family: 'Inter', sans-serif; font-size: .72rem; margin-top: 2px; }
+.suite-card-summer { display: block; margin-top: 9px; font-family: 'Inter', sans-serif; font-size: .7rem; font-weight: 400; line-height: 1.65; color: var(--text-light); }
+.suite-card-summer strong { font-weight: 600; color: #8c722d; }
 .suite-card-actions { gap: 8px; flex-wrap: wrap; }
 .suite-card-actions .btn { flex: 1 1 90px; padding: 10px 16px; font-size: .74rem; }
 .page-home .features-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--light-gray); border-radius: 8px; overflow: hidden; background: #fffefa; }
