@@ -1,39 +1,34 @@
-/* Check-in / check-out range calendar */
+/* Stay-date picker. The existing booking fields and submission contract stay unchanged. */
 (() => {
   const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  const MONTHS = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
-
+  const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const pad = (n) => String(n).padStart(2, '0');
   const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const fromKey = (key) => {
-    const [y, m, day] = key.split('-').map(Number);
-    return new Date(y, m - 1, day);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key || '')) return null;
+    const [year, month, day] = key.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return toKey(date) === key ? date : null;
   };
-  const startOfToday = () => {
-    const n = new Date();
-    return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  const today = () => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   };
-  const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + n, 1);
-  const sameDay = (a, b) => a && b && toKey(a) === toKey(b);
-  const nice = (key) =>
-    fromKey(key).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' });
-  const nightCount = (a, b) => Math.round((b - a) / 86400000);
-  const eventInside = (e, el) => {
-    const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
-    return path.includes(el) || (e.target && el.contains(e.target));
+  const monthStart = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
+  const addDays = (d, amount) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + amount);
+  const addMonths = (d, amount) => new Date(d.getFullYear(), d.getMonth() + amount, 1);
+  const shiftMonth = (d, amount) => {
+    const month = addMonths(d, amount);
+    return new Date(month.getFullYear(), month.getMonth(), Math.min(d.getDate(), new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()));
   };
-
-  function monthGrid(year, month) {
-    const first = new Date(year, month, 1);
-    const days = new Date(year, month + 1, 0).getDate();
-    const cells = [];
-    for (let i = 0; i < first.getDay(); i += 1) cells.push(null);
-    for (let d = 1; d <= days; d += 1) cells.push(new Date(year, month, d));
-    return cells;
-  }
+  const sameDay = (a, b) => Boolean(a && b && toKey(a) === toKey(b));
+  const formatDate = (d) => d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
+  const fullDate = (d) => d.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const formatMonth = (d) => d.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' });
+  // Calendar days, rather than elapsed hours, keep the count correct across daylight saving time.
+  const nights = (start, end) => Math.round((Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000);
+  const nightLabel = (start, end) => `${nights(start, end)} ${nights(start, end) === 1 ? 'night' : 'nights'}`;
+  let nextId = 0;
 
   function init(root) {
     const checkinBtn = root.querySelector('[data-role="checkin"]');
@@ -44,240 +39,319 @@
     const checkoutValue = root.querySelector('[data-display="checkout"]');
     const panel = root.querySelector('[data-panel]');
     const nightsEl = root.querySelector('[data-nights]');
-    if (!checkinBtn || !checkoutBtn || !checkinInput || !checkoutInput || !panel || !nightsEl) return;
+    if (!checkinBtn || !checkoutBtn || !checkinInput || !checkoutInput || !checkinValue || !checkoutValue || !panel || !nightsEl) return;
 
-    let checkin = null;
-    let checkout = null;
+    const id = `stay-dates-${++nextId}`;
+    let checkin = fromKey(checkinInput.value);
+    let checkout = fromKey(checkoutInput.value);
+    if (checkin && checkin < today()) checkin = null;
+    if (!checkin || (checkout && checkout <= checkin)) checkout = null;
+    const initialCheckin = checkin;
+    const initialCheckout = checkout;
     let selecting = 'checkin';
-    let view = new Date(startOfToday().getFullYear(), startOfToday().getMonth(), 1);
+    let view = monthStart(checkin || today());
+    let focused = checkin || today();
     let hover = null;
     let open = false;
-    let ignoreCloseUntil = 0;
+    let opener = checkinBtn;
+    let monthCount = root.clientWidth >= 560 ? 2 : 1;
+    panel.setAttribute('aria-describedby', `${id}-help`);
 
-    const rangeEnd = () => checkout || (checkin && hover && hover > checkin ? hover : null);
-
-    const bumpIgnore = () => {
-      ignoreCloseUntil = Date.now() + 700;
+    const announce = (message) => {
+      const status = panel.querySelector('[data-status]');
+      if (status) status.textContent = message;
     };
 
-    const setOpen = (next, role) => {
-      open = next;
-      panel.hidden = !next;
-      if (role) selecting = role;
-      checkinBtn.setAttribute('aria-expanded', next && selecting === 'checkin' ? 'true' : 'false');
-      checkoutBtn.setAttribute('aria-expanded', next && selecting === 'checkout' ? 'true' : 'false');
-      checkinBtn.classList.toggle('is-active', next && selecting === 'checkin');
-      checkoutBtn.classList.toggle('is-active', next && selecting === 'checkout');
-      if (next) {
-        if (checkin && selecting === 'checkout') {
-          view = new Date(checkin.getFullYear(), checkin.getMonth(), 1);
-        }
-        render();
-      }
-    };
-
-    const syncMode = () => {
-      const mode = panel.querySelector('[data-mode]');
-      if (!mode) return;
-      const isOut = selecting === 'checkout';
-      mode.textContent = isOut ? 'Check-out' : 'Check-in';
-      mode.classList.toggle('is-checkin', !isOut);
-      mode.classList.toggle('is-checkout', isOut);
-      panel.setAttribute('aria-label', isOut ? 'Choose check-out date' : 'Choose check-in date');
-    };
-
-    const syncFields = () => {
+    function syncFields() {
       checkinInput.value = checkin ? toKey(checkin) : '';
       checkoutInput.value = checkout ? toKey(checkout) : '';
-      checkinValue.textContent = checkin ? nice(toKey(checkin)) : 'Add date';
-      checkoutValue.textContent = checkout ? nice(toKey(checkout)) : 'Add date';
+      checkinValue.textContent = checkin ? formatDate(checkin) : 'Add date';
+      checkoutValue.textContent = checkout ? formatDate(checkout) : 'Add date';
       checkinBtn.classList.toggle('is-filled', Boolean(checkin));
       checkoutBtn.classList.toggle('is-filled', Boolean(checkout));
-      if (checkin && checkout) {
-        const n = nightCount(checkin, checkout);
-        nightsEl.hidden = false;
-        nightsEl.textContent = n === 1 ? '1 night' : `${n} nights`;
-      } else {
-        nightsEl.hidden = true;
-        nightsEl.textContent = '';
-      }
-      const hint = panel.querySelector('[data-hint]');
-      if (hint) {
-        hint.textContent = !checkin ? 'Select check-in' : checkout ? nightsEl.textContent : 'Select check-out';
-      }
-      const clearBtn = panel.querySelector('[data-clear]');
-      if (clearBtn) clearBtn.hidden = !checkin;
-      syncMode();
-    };
-
-    const paintDays = () => {
-      const end = rangeEnd();
-      const today = startOfToday();
-      panel.querySelectorAll('[data-day]').forEach((btn) => {
-        const day = fromKey(btn.getAttribute('data-day'));
-        const isStart = sameDay(day, checkin);
-        const isEnd = sameDay(day, checkout) || (!checkout && end && sameDay(day, end));
-        const inRange = checkin && end && day > checkin && day < end;
-        btn.classList.toggle('is-today', sameDay(day, today));
-        btn.classList.toggle('is-start', isStart);
-        btn.classList.toggle('is-end', isEnd);
-        btn.classList.toggle('is-range-start', isStart && Boolean(end));
-        btn.classList.toggle('is-range-end', isEnd && Boolean(checkin) && !isStart);
-        btn.classList.toggle('is-in-range', inRange || (isStart && Boolean(end)) || (isEnd && Boolean(checkin)));
-        btn.setAttribute('aria-pressed', isStart || isEnd ? 'true' : 'false');
+      nightsEl.hidden = !(checkin && checkout);
+      nightsEl.textContent = checkin && checkout ? nightLabel(checkin, checkout) : '';
+      [checkinBtn, checkoutBtn].forEach((button) => {
+        const active = open && button.dataset.role === selecting;
+        button.setAttribute('aria-expanded', String(active));
+        button.classList.toggle('is-active', active);
       });
-    };
+      panel.setAttribute('aria-label', selecting === 'checkout' ? 'Choose check-out date' : 'Choose check-in date');
+      panel.querySelectorAll('[data-select]').forEach((button) => {
+        const active = button.dataset.select === selecting;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      const arrival = panel.querySelector('[data-summary="checkin"]');
+      const departure = panel.querySelector('[data-summary="checkout"]');
+      if (arrival) arrival.textContent = checkin ? formatDate(checkin) : 'Add date';
+      if (departure) departure.textContent = checkout ? formatDate(checkout) : 'Add date';
+      const hint = panel.querySelector('[data-hint]');
+      if (hint) hint.textContent = selecting === 'checkout' ? 'Choose your check-out date' : 'Choose your check-in date';
+      const clear = panel.querySelector('[data-clear]');
+      if (clear) clear.disabled = !checkin;
+    }
 
-    const pick = (day) => {
-      if (day < startOfToday()) return;
-      if (selecting === 'checkin' || !checkin || day <= checkin) {
-        checkin = day;
-        checkout = null;
-        hover = null;
-        selecting = 'checkout';
-        checkinBtn.classList.remove('is-active');
-        checkoutBtn.classList.add('is-active');
-        checkinBtn.setAttribute('aria-expanded', 'false');
-        checkoutBtn.setAttribute('aria-expanded', 'true');
-      } else {
-        checkout = day;
-        hover = null;
-        selecting = 'checkin';
-        setOpen(false);
+    function paintDays() {
+      const preview = selecting === 'checkout' && !checkout && checkin && hover > checkin ? hover : null;
+      const end = checkout || preview;
+      panel.querySelectorAll('[data-day]').forEach((button) => {
+        const day = fromKey(button.dataset.day);
+        const isStart = sameDay(day, checkin);
+        const isEnd = sameDay(day, end);
+        const inRange = Boolean(checkin && end && day >= checkin && day <= end);
+        button.classList.toggle('is-start', isStart);
+        button.classList.toggle('is-end', isEnd);
+        button.classList.toggle('is-range-start', isStart && Boolean(end));
+        button.classList.toggle('is-range-end', isEnd && Boolean(checkin));
+        button.classList.toggle('is-in-range', inRange);
+        button.classList.toggle('is-preview', Boolean(preview && inRange));
+        button.setAttribute('aria-pressed', String(isStart || sameDay(day, checkout)));
+        button.setAttribute('aria-label', `${fullDate(day)}${isStart ? ', check-in' : sameDay(day, checkout) ? ', check-out' : ''}`);
+        button.tabIndex = !button.disabled && sameDay(day, focused) ? 0 : -1;
+      });
+      const count = panel.querySelector('[data-preview-nights]');
+      if (count) {
+        count.hidden = !(checkin && end);
+        count.textContent = checkin && end ? nightLabel(checkin, end) : '';
       }
-      syncFields();
-      paintDays();
-    };
+    }
 
-    const clear = () => {
-      checkin = null;
-      checkout = null;
-      hover = null;
-      selecting = 'checkin';
-      syncFields();
-      paintDays();
-      setOpen(true, 'checkin');
-      checkinBtn.focus();
-    };
-
-    function renderMonth(year, month) {
-      const today = startOfToday();
-      const days = monthGrid(year, month)
-        .map((day) => {
-          if (!day) return '<span class="date-range__blank" aria-hidden="true"></span>';
-          const disabled = day < today;
-          const label = day.toLocaleDateString('en-CA', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-          });
-          return `<button type="button" class="date-range__day" data-day="${toKey(day)}" ${disabled ? 'disabled' : ''} aria-label="${label}">${day.getDate()}</button>`;
-        })
-        .join('');
-      return `<div class="date-range__month">
-        <h4 class="date-range__month-title">${MONTHS[month]} ${year}</h4>
-        <div class="date-range__weekdays">${WEEKDAYS.map((d) => `<span>${d}</span>`).join('')}</div>
-        <div class="date-range__grid">${days}</div>
-      </div>`;
+    function renderMonth(month, index) {
+      const year = month.getFullYear();
+      const monthIndex = month.getMonth();
+      const leading = month.getDay();
+      const length = new Date(year, monthIndex + 1, 0).getDate();
+      const rows = [];
+      for (let row = 0; row < Math.ceil((leading + length) / 7); row += 1) {
+        const cells = [];
+        for (let column = 0; column < 7; column += 1) {
+          const number = row * 7 + column - leading + 1;
+          if (number < 1 || number > length) {
+            cells.push('<td class="date-range__blank"></td>');
+            continue;
+          }
+          const day = new Date(year, monthIndex, number);
+          const current = sameDay(day, today());
+          cells.push(`<td><button type="button" class="date-range__day${current ? ' is-today' : ''}" data-day="${toKey(day)}" tabindex="-1" aria-label="${fullDate(day)}"${day < today() ? ' disabled' : ''}${current ? ' aria-current="date"' : ''}>${number}</button></td>`);
+        }
+        rows.push(`<tr>${cells.join('')}</tr>`);
+      }
+      return `<section class="date-range__month" aria-labelledby="${id}-month-${index}">
+        <h4 class="date-range__month-title" id="${id}-month-${index}">${formatMonth(month)}</h4>
+        <table class="date-range__grid" role="grid" aria-labelledby="${id}-month-${index}">
+          <thead><tr>${WEEKDAYS.map((day, i) => `<th scope="col"><abbr title="${WEEKDAY_NAMES[i]}">${day}</abbr></th>`).join('')}</tr></thead>
+          <tbody>${rows.join('')}</tbody>
+        </table>
+      </section>`;
     }
 
     function render() {
-      const next = addMonths(view, 1);
-      const minView = new Date(startOfToday().getFullYear(), startOfToday().getMonth(), 1);
-      const prevDisabled = view <= minView ? 'disabled' : '';
-      const isOut = selecting === 'checkout';
+      const minView = monthStart(today());
+      if (view < minView) view = minView;
+      if (focused < view || focused >= addMonths(view, monthCount)) focused = view < today() ? today() : view;
+      panel.style.setProperty('--date-months', monthCount);
       panel.innerHTML = `
-        <p class="date-range__mode ${isOut ? 'is-checkout' : 'is-checkin'}" data-mode>${isOut ? 'Check-out' : 'Check-in'}</p>
-        <div class="date-range__board">
-          <button type="button" class="date-range__nav-btn date-range__nav-btn--prev" data-nav="-1" aria-label="Previous month" ${prevDisabled}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <button type="button" class="date-range__nav-btn date-range__nav-btn--next" data-nav="1" aria-label="Next month">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-          <div class="date-range__months">
-            ${renderMonth(view.getFullYear(), view.getMonth())}
-            ${renderMonth(next.getFullYear(), next.getMonth())}
-          </div>
+        <div class="date-range__heading">
+          <div><span class="date-range__eyebrow">Your stay</span><p class="date-range__title">Choose your dates</p></div>
+          <button type="button" class="date-range__close" data-close aria-label="Close date picker"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
         </div>
-        <div class="date-range__footer">
-          <span class="date-range__hint" data-hint></span>
-          <button type="button" class="date-range__clear" data-clear hidden>Clear dates</button>
-        </div>`;
+        <div class="date-range__summary">
+          <button type="button" class="date-range__summary-date" data-select="checkin"><span class="date-range__summary-label"><span>01</span> Check-in</span><strong data-summary="checkin"></strong></button>
+          <span class="date-range__summary-arrow" aria-hidden="true">&rarr;</span>
+          <button type="button" class="date-range__summary-date" data-select="checkout"><span class="date-range__summary-label"><span>02</span> Check-out</span><strong data-summary="checkout"></strong></button>
+        </div>
+        <div class="date-range__board">
+          <div class="date-range__nav">
+            <button type="button" class="date-range__nav-btn" data-nav="-1" aria-label="Previous month"${view <= minView ? ' disabled' : ''}><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+            <span class="date-range__hint" data-hint></span>
+            <button type="button" class="date-range__nav-btn" data-nav="1" aria-label="Next month"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          </div>
+          <div class="date-range__months">${Array.from({ length: monthCount }, (_, index) => renderMonth(addMonths(view, index), index)).join('')}</div>
+        </div>
+        <div class="date-range__footer"><button type="button" class="date-range__text-btn" data-today>Today's month</button><span class="date-range__night-count" data-preview-nights hidden></span><button type="button" class="date-range__text-btn" data-clear>Clear dates</button></div>
+        <p class="date-range__sr-only" id="${id}-help">Use arrow keys to move between dates, Page Up or Page Down to change months, and Enter to select. Home and End move to the start and end of a week. Escape closes the calendar.</p>
+        <p class="date-range__sr-only" role="status" aria-live="polite" aria-atomic="true" data-status></p>`;
       syncFields();
       paintDays();
     }
 
-    const goMonth = (delta) => {
-      bumpIgnore();
-      view = addMonths(view, delta);
+    function focusDay(day) {
+      focused = day < today() ? today() : day;
+      if (focused < view || focused >= addMonths(view, monthCount)) {
+        view = monthStart(focused);
+        render();
+      }
+      paintDays();
+      const button = panel.querySelector(`[data-day="${toKey(focused)}"]`);
+      if (button) button.focus();
+    }
+
+    function close(restoreFocus = false) {
+      open = false;
+      hover = null;
+      panel.hidden = true;
+      syncFields();
+      if (restoreFocus) opener.focus();
+    }
+
+    function show(role, trigger) {
+      selecting = role === 'checkout' && checkin ? 'checkout' : 'checkin';
+      opener = trigger || (selecting === 'checkout' ? checkoutBtn : checkinBtn);
+      focused = selecting === 'checkout' ? checkout || addDays(checkin, 1) : checkin || today();
+      if (focused < today()) focused = today();
+      view = monthStart(focused);
+      monthCount = root.clientWidth >= 560 ? 2 : 1;
+      hover = null;
+      open = true;
+      panel.hidden = false;
       render();
-    };
+      // Bring the complete picker into view before moving keyboard focus to a day.
+      panel.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+      focusDay(focused);
+    }
 
-    panel.addEventListener('pointerup', (e) => {
-      const nav = e.target.closest('[data-nav]');
-      if (!nav || nav.disabled) return;
-      e.preventDefault();
-      e.stopPropagation();
-      goMonth(Number(nav.getAttribute('data-nav')));
+    function pick(day) {
+      if (day < today()) return;
+      hover = null;
+      if (selecting === 'checkin' || !checkin || day <= checkin) {
+        checkin = day;
+        checkout = null;
+        selecting = 'checkout';
+        syncFields();
+        focusDay(addDays(day, 1));
+        announce(`Check-in ${fullDate(day)}. Choose a check-out date.`);
+      } else {
+        checkout = day;
+        syncFields();
+        paintDays();
+        opener = checkoutBtn;
+        close(true);
+      }
+    }
+
+    panel.addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button || button.disabled) return;
+      if (button.hasAttribute('data-close')) return close(true);
+      if (button.dataset.select) return show(button.dataset.select);
+      if (button.dataset.day) return pick(fromKey(button.dataset.day));
+      if (button.dataset.nav) {
+        const delta = Number(button.dataset.nav);
+        view = addMonths(view, delta);
+        focused = shiftMonth(focused, delta);
+        hover = null;
+        render();
+        const nextButton = panel.querySelector(`[data-nav="${delta}"]`);
+        if (nextButton && !nextButton.disabled) nextButton.focus({ preventScroll: true });
+        else focusDay(focused);
+        announce(formatMonth(view));
+      } else if (button.hasAttribute('data-today')) {
+        view = monthStart(today());
+        focused = today();
+        render();
+        focusDay(focused);
+      } else if (button.hasAttribute('data-clear')) {
+        checkin = null;
+        checkout = null;
+        hover = null;
+        selecting = 'checkin';
+        syncFields();
+        focusDay(focused);
+        announce('Dates cleared. Choose a check-in date.');
+      }
     });
 
-    panel.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const nav = e.target.closest('[data-nav]');
-      if (nav) {
-        e.preventDefault();
-        return;
+    panel.addEventListener('keydown', (event) => {
+      const button = event.target.closest('[data-day]');
+      if (!button) return;
+      const day = fromKey(button.dataset.day);
+      let destination;
+      switch (event.key) {
+        case 'ArrowLeft': destination = addDays(day, -1); break;
+        case 'ArrowRight': destination = addDays(day, 1); break;
+        case 'ArrowUp': destination = addDays(day, -7); break;
+        case 'ArrowDown': destination = addDays(day, 7); break;
+        case 'Home': destination = addDays(day, -day.getDay()); break;
+        case 'End': destination = addDays(day, 6 - day.getDay()); break;
+        case 'PageUp': destination = shiftMonth(day, event.shiftKey ? -12 : -1); break;
+        case 'PageDown': destination = shiftMonth(day, event.shiftKey ? 12 : 1); break;
+        default: return;
       }
-      if (e.target.closest('[data-clear]')) {
-        bumpIgnore();
-        clear();
-        return;
-      }
-      const dayBtn = e.target.closest('[data-day]');
-      if (dayBtn && !dayBtn.disabled) pick(fromKey(dayBtn.getAttribute('data-day')));
+      event.preventDefault();
+      focusDay(destination);
     });
 
-    panel.addEventListener('pointerover', (e) => {
-      if (e.pointerType && e.pointerType !== 'mouse') return;
-      const dayBtn = e.target.closest('[data-day]');
-      if (!dayBtn || dayBtn.disabled || !checkin || checkout) return;
-      const day = fromKey(dayBtn.getAttribute('data-day'));
-      if (!(day > checkin)) return;
-      if (hover && sameDay(hover, day)) return;
-      hover = day;
+    panel.addEventListener('focusin', (event) => {
+      const button = event.target.closest('[data-day]');
+      if (!button) return;
+      focused = fromKey(button.dataset.day);
+      hover = selecting === 'checkout' && checkin && !checkout && focused > checkin ? focused : null;
+      paintDays();
+    });
+    panel.addEventListener('pointerover', (event) => {
+      if (event.pointerType !== 'mouse' || selecting !== 'checkout' || !checkin || checkout) return;
+      const button = event.target.closest('[data-day]');
+      const day = button && !button.disabled ? fromKey(button.dataset.day) : null;
+      hover = day && day > checkin ? day : null;
+      paintDays();
+    });
+    panel.addEventListener('pointerleave', () => {
+      hover = null;
       paintDays();
     });
 
-    checkinBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      bumpIgnore();
-      setOpen(!(open && selecting === 'checkin'), 'checkin');
+    [checkinBtn, checkoutBtn].forEach((button) => {
+      button.addEventListener('click', () => {
+        const role = button === checkoutBtn && checkin ? 'checkout' : 'checkin';
+        if (open && selecting === role) close();
+        else show(role, button);
+      });
     });
-    checkoutBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      bumpIgnore();
-      const role = checkin ? 'checkout' : 'checkin';
-      setOpen(!(open && selecting === role), role);
+    document.addEventListener('pointerdown', (event) => {
+      if (open && !root.contains(event.target)) close();
     });
-
-    document.addEventListener('click', (e) => {
-      if (!open) return;
-      if (Date.now() < ignoreCloseUntil) return;
-      if (eventInside(e, root)) return;
-      setOpen(false);
+    document.addEventListener('focusin', (event) => {
+      if (open && !root.contains(event.target)) close();
     });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && open) {
-        setOpen(false);
-        (selecting === 'checkout' ? checkoutBtn : checkinBtn).focus();
+    root.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && open) {
+        event.preventDefault();
+        event.stopPropagation();
+        close(true);
       }
     });
+    const form = root.closest('form');
+    if (form) form.addEventListener('reset', (event) => {
+      // Hidden input values also change their native defaults; restore the original dates explicitly.
+      queueMicrotask(() => {
+        if (event.defaultPrevented) return;
+        checkin = initialCheckin;
+        checkout = initialCheckout;
+        close();
+      });
+    });
+    if ('ResizeObserver' in window) new ResizeObserver(() => {
+      const count = root.clientWidth >= 560 ? 2 : 1;
+      if (count === monthCount) return;
+      monthCount = count;
+      if (!open) return;
+      const active = document.activeElement;
+      const hadFocus = panel.contains(active);
+      const control = active && (active.hasAttribute('data-nav') ? `[data-nav="${active.dataset.nav}"]` : active.hasAttribute('data-close') ? '[data-close]' : null);
+      view = monthStart(focused);
+      render();
+      if (hadFocus) {
+        const target = control && panel.querySelector(control);
+        if (target && !target.disabled) target.focus({ preventScroll: true });
+        else focusDay(focused);
+      }
+    }).observe(root);
 
     syncFields();
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-date-range]').forEach(init);
-  });
+  const start = () => document.querySelectorAll('[data-date-range]').forEach(init);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();

@@ -20,6 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
         header.classList.remove('scrolled');
         header.classList.add('transparent');
       }
+      if (header.classList.contains('menu-open')) {
+        header.style.transform = 'none';
+        lastScroll = scrollY;
+        return;
+      }
       // Hide header on scroll down, show on scroll up (only after 300px)
       if (scrollY > 300) {
         if (scrollY > lastScroll + 5) {
@@ -42,126 +47,88 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.querySelector('.mobile-overlay');
 
   if (hamburger && navMenu) {
-    hamburger.addEventListener('click', () => {
-      hamburger.classList.toggle('active');
-      navMenu.classList.toggle('open');
-      const isOpen = navMenu.classList.contains('open');
-      hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      if (overlay) overlay.classList.toggle('active');
-      document.body.style.overflow = isOpen ? 'hidden' : '';
-    });
+    const mobileMenu = window.matchMedia('(max-width: 968px)');
+    let isOpen = false;
+    let previousOverflow = null;
+    const menuLinks = () => Array.from(navMenu.querySelectorAll('a[href]:not([tabindex="-1"])'));
+    const focusFirstLink = () => (menuLinks()[0] || hamburger).focus({ preventScroll: true });
 
-    const closeMenu = () => {
+    const closeMenu = (restoreFocus = false) => {
+      isOpen = false;
       hamburger.classList.remove('active');
       hamburger.setAttribute('aria-expanded', 'false');
+      hamburger.setAttribute('aria-label', 'Open navigation menu');
       navMenu.classList.remove('open');
+      navMenu.toggleAttribute('inert', mobileMenu.matches);
       if (overlay) overlay.classList.remove('active');
-      document.body.style.overflow = '';
+      if (header) header.classList.remove('menu-open');
+      document.body.classList.remove('mobile-menu-open');
+      if (previousOverflow !== null) {
+        if (previousOverflow.value) document.body.style.setProperty('overflow', previousOverflow.value, previousOverflow.priority);
+        else document.body.style.removeProperty('overflow');
+        previousOverflow = null;
+      }
+      if (restoreFocus && mobileMenu.matches) hamburger.focus({ preventScroll: true });
     };
 
-    if (overlay) overlay.addEventListener('click', closeMenu);
-
-    navMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', closeMenu);
-    });
-  }
-
-  // --- Scroll animations (IntersectionObserver) with stagger support ---
-  const animatedElements = document.querySelectorAll('.fade-up, .fade-in');
-  if (animatedElements.length > 0) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, {
-      threshold: 0.1,
-      rootMargin: '0px 0px -40px 0px'
-    });
-
-    animatedElements.forEach(el => observer.observe(el));
-  }
-
-  // --- Stagger children animation ---
-  const staggerContainers = document.querySelectorAll('.stagger-children');
-  if (staggerContainers.length > 0) {
-    const staggerObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          staggerObserver.unobserve(entry.target);
-        }
-      });
-    }, {
-      threshold: 0.05,
-      rootMargin: '0px 0px -20px 0px'
-    });
-
-    staggerContainers.forEach(el => staggerObserver.observe(el));
-  }
-
-  // --- Counter animation for stats ---
-  const counterElements = document.querySelectorAll('.stat-number[data-count]');
-  if (counterElements.length > 0) {
-    const counterObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          animateCounter(entry.target);
-          counterObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.5 });
-
-    counterElements.forEach(el => counterObserver.observe(el));
-  }
-
-  function animateCounter(element) {
-    const target = parseInt(element.getAttribute('data-count'), 10);
-    const suffix = element.querySelector('.counter-suffix');
-    const suffixText = suffix ? suffix.textContent : '';
-    const duration = 2000;
-    const start = performance.now();
-
-    function easeOutExpo(t) {
-      return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-    }
-
-    function update(now) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeOutExpo(progress);
-      const current = Math.round(target * easedProgress);
-
-      if (suffix) {
-        element.innerHTML = current + '<span class="counter-suffix">' + suffixText + '</span>';
-      } else {
-        element.textContent = current;
+    const openMenu = () => {
+      if (!mobileMenu.matches || isOpen) return;
+      previousOverflow = {
+        value: document.body.style.getPropertyValue('overflow'),
+        priority: document.body.style.getPropertyPriority('overflow'),
+      };
+      isOpen = true;
+      navMenu.removeAttribute('inert');
+      navMenu.classList.add('open');
+      hamburger.classList.add('active');
+      hamburger.setAttribute('aria-expanded', 'true');
+      hamburger.setAttribute('aria-label', 'Close navigation menu');
+      if (overlay) overlay.classList.add('active');
+      if (header) {
+        header.classList.add('menu-open');
+        header.style.transform = 'none';
       }
+      document.body.classList.add('mobile-menu-open');
+      document.body.style.setProperty('overflow', 'hidden');
+      focusFirstLink();
+    };
 
-      if (progress < 1) {
-        requestAnimationFrame(update);
+    hamburger.addEventListener('click', () => isOpen ? closeMenu(true) : openMenu());
+    if (overlay) overlay.addEventListener('click', () => closeMenu(true));
+    navMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => closeMenu(true)));
+
+    document.addEventListener('keydown', (event) => {
+      if (!isOpen || !mobileMenu.matches) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMenu(true);
+      } else if (event.key === 'Tab') {
+        // Follow the DOM order: navigation links, then the persistent close button.
+        const controls = [...menuLinks(), hamburger];
+        const current = controls.indexOf(document.activeElement);
+        if (current === -1 || (!event.shiftKey && current === controls.length - 1) || (event.shiftKey && current === 0)) {
+          event.preventDefault();
+          (event.shiftKey ? controls[controls.length - 1] : controls[0]).focus({ preventScroll: true });
+        }
       }
-    }
+    });
+    document.addEventListener('focusin', (event) => {
+      if (isOpen && mobileMenu.matches && event.target !== hamburger && !navMenu.contains(event.target)) focusFirstLink();
+    });
 
-    requestAnimationFrame(update);
+    const syncMenuViewport = () => {
+      const focusedNav = navMenu.contains(document.activeElement);
+      const focusedHamburger = document.activeElement === hamburger;
+      closeMenu();
+      if (mobileMenu.matches && focusedNav) hamburger.focus({ preventScroll: true });
+      else if (!mobileMenu.matches && focusedHamburger) focusFirstLink();
+    };
+    if (mobileMenu.addEventListener) mobileMenu.addEventListener('change', syncMenuViewport);
+    else mobileMenu.addListener(syncMenuViewport);
+    syncMenuViewport();
   }
 
-  // --- Parallax effect on hero backgrounds ---
-  const heroSection = document.querySelector('.hero');
-  const heroBg = heroSection ? heroSection.querySelector('.hero-bg') : null;
-
-  if (heroBg && !prefersReducedMotion) {
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      const heroHeight = heroSection.offsetHeight;
-      if (scrollY < heroHeight) {
-        const parallaxSpeed = 0.4;
-        heroBg.style.transform = 'scale(1.1) translateY(' + (scrollY * parallaxSpeed) + 'px)';
-      }
-    }, { passive: true });
-  }
+  // Content and statistics render immediately; the design uses static photography.
 
   // --- Scroll to top button ---
   const scrollTopBtn = document.querySelector('.scroll-top');
@@ -398,36 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- Magnetic effect on primary buttons (desktop only) ---
-  if (window.matchMedia('(hover: hover)').matches && !prefersReducedMotion) {
-    const magneticBtns = document.querySelectorAll('.btn-primary, .btn-book');
-    magneticBtns.forEach(btn => {
-      btn.addEventListener('mousemove', (e) => {
-        const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        btn.style.transform = 'translate(' + (x * 0.15) + 'px, ' + (y * 0.15) + 'px)';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.transform = '';
-      });
-    });
-  }
-
-  // --- Smooth reveal for hero content ---
-  const heroContent = document.querySelector('.hero .hero-content');
-  if (heroContent && !prefersReducedMotion) {
-    const children = heroContent.children;
-    Array.from(children).forEach((child, i) => {
-      child.style.opacity = '0';
-      child.style.transform = 'translateY(30px)';
-      child.style.transition = 'opacity 0.8s ease ' + (0.2 + i * 0.15) + 's, transform 0.8s ease ' + (0.2 + i * 0.15) + 's';
-      setTimeout(() => {
-        child.style.opacity = '1';
-        child.style.transform = 'translateY(0)';
-      }, 100);
-    });
-  }
+  // Render primary content immediately; delaying its opacity delays the main paint.
 
   // --- Active nav link highlight (supports clean URLs and .html paths) ---
   const normalizePath = (path) => {
@@ -441,6 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.header-nav a').forEach(link => {
     if (normalizePath(link.getAttribute('href')) === currentPath) {
       link.classList.add('active');
+      link.setAttribute('aria-current', 'page');
     }
   });
 
@@ -449,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
     typeof HTMLScriptElement.supports === 'function' &&
     HTMLScriptElement.supports('speculationrules');
 
-  if (!supportsSpeculation) {
+  if (!supportsSpeculation && !navigator.connection?.saveData && !/2g/.test(navigator.connection?.effectiveType || '')) {
     const prefetched = new Set();
     document.addEventListener('mouseover', (e) => {
       const link = e.target.closest ? e.target.closest('a[href]') : null;
