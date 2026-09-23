@@ -3494,6 +3494,73 @@ h2 { font-size: clamp(2rem, 3.7vw, 3.35rem); line-height: 1.16; }
   .cta-banner .btn { padding-inline: 24px; }
 }
 
+/* Use one shared section gap instead of adding two neighbouring paddings. */
+.page-home main > .section-padding { padding-block: clamp(64px, 6vw, 88px); }
+.page-home main > .section-padding + .section-padding { padding-top: 0; }
+@media (max-width: 768px) {
+  .page-home main > .section-padding { padding-block: 56px; }
+  .page-home .section-label { margin-bottom: 14px; }
+  .page-home .section-title, .page-home .about-content h2 { margin-bottom: 18px; }
+  .page-home .divider { margin-block: 20px 24px; }
+  .page-home .section-subtitle { margin-bottom: 30px; }
+  .page-home .about-grid { gap: 28px; }
+  .page-home .about-content > :last-child { margin-bottom: 0; }
+  .page-home #faq .container { gap: 0; }
+  .page-home #faq .section-subtitle { margin-bottom: 16px; }
+}
+
+/* Give existing review images one frame without overlaps or empty crops. */
+  .page-home .about-images {
+    display: grid;
+    grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #fffefa;
+    border: 1px solid #ded9cf;
+    border-radius: 8px;
+  }
+  .page-home .about-img-main {
+    grid-column: 1 / -1;
+    border: 0;
+    border-radius: 4px;
+    box-shadow: none;
+  }
+  .page-home .about-img-secondary {
+    grid-column: 2;
+    grid-row: 2;
+    position: static;
+    width: 100%;
+    max-width: 300px;
+    justify-self: end;
+    height: auto;
+    aspect-ratio: auto;
+    margin: 0;
+    border: 0;
+    border-radius: 4px;
+    box-shadow: none;
+  }
+  .page-home .about-img-secondary:last-child { grid-column: 1 / -1; justify-self: center; }
+  .page-home .about-images img { display: block; height: auto; }
+  .page-home .about-img-main img { aspect-ratio: auto 7 / 5; }
+  .page-home .about-img-secondary img { aspect-ratio: auto 1; }
+  .page-home .about-images--wide .about-img-main img { aspect-ratio: auto 25 / 9; }
+  .page-home .about-images--wide .about-img-secondary img { aspect-ratio: auto 15 / 8; }
+  .page-home .about-experience-badge {
+    grid-column: 1;
+    grid-row: 2;
+    position: static;
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    padding: 12px 4px;
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .page-home .about-experience-badge .number { font-size: 2rem; color: #8c722d; }
+  .page-home .about-experience-badge .text { font-size: .7rem; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+
 /* Premium interior pages. Append after the shared/global styles.
    Requires body.page-facilities / page-location / page-gallery / page-pricing.
    Existing content, images, tab states and pricing states remain in the HTML. */
