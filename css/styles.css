@@ -3340,8 +3340,8 @@ h2 { font-size: clamp(2rem, 3.7vw, 3.35rem); line-height: 1.16; }
 .suite-card-specs svg { color: #8c722d; }
 .suite-card-price { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 0; }
 .suite-card-price span { display: block; font-family: 'Inter', sans-serif; font-size: .72rem; margin-top: 2px; }
-.suite-card-summer { display: block; margin-top: 9px; font-family: 'Inter', sans-serif; font-size: .7rem; font-weight: 400; line-height: 1.65; color: var(--text-light); }
-.suite-card-summer strong { font-weight: 600; color: #8c722d; }
+.suite-card-summer { display: block; width: fit-content; max-width: 100%; margin-top: 9px; padding: 7px 10px; border: 1px solid #dbcda5; border-radius: 6px; background: #faf7ed; font-family: 'Inter', sans-serif; font-size: .68rem; font-weight: 400; line-height: 1.35; color: #806728; }
+.suite-card-summer strong { font-weight: 600; color: inherit; }
 .suite-card-actions { gap: 8px; flex-wrap: wrap; }
 .suite-card-actions .btn { flex: 1 1 90px; padding: 10px 16px; font-size: .74rem; }
 .page-home .features-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--light-gray); border-radius: 8px; overflow: hidden; background: #fffefa; }
@@ -3710,7 +3710,7 @@ h2 { font-size: clamp(2rem, 3.7vw, 3.35rem); line-height: 1.16; }
 .page-facilities .furnishing-list li:hover { background: none; }
 .page-facilities .furnish-dot { width: 5px; height: 5px; background: var(--interior-brass); }
 
-/* Location: two distinct tower cards, with the original address text intact. */
+/* Location: matching tower cards, with the original address text intact. */
 .page-location .properties-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .page-location .property-card { padding: clamp(30px, 4vw, 52px); border: 1px solid var(--interior-line); border-top: 3px solid var(--gold); border-radius: 4px; background: var(--interior-ivory); box-shadow: none; }
 .page-location .property-card:hover { transform: none; box-shadow: none; border-color: var(--interior-line); border-top-color: var(--gold); }
@@ -3719,14 +3719,7 @@ h2 { font-size: clamp(2rem, 3.7vw, 3.35rem); line-height: 1.16; }
 .page-location .property-card h3 { font-size: clamp(2rem, 3vw, 2.9rem); font-weight: 500; margin-bottom: 20px; }
 .page-location .property-card .address { font-size: 1.05rem; color: var(--navy); margin-bottom: 4px; }
 .page-location .property-card > p:last-child { margin-bottom: 0; font-size: .9rem; color: var(--interior-muted); }
-.page-location .property-card:last-child { background: var(--navy); border-color: var(--navy); border-top-color: var(--gold); }
-.page-location .property-card:last-child h3,
-.page-location .property-card:last-child .address { color: #faf8f2; }
-.page-location .property-card:last-child > p:last-child { color: #c5cbd4; }
-.page-location .property-card:last-child .property-card-icon { border-color: #c8a95166; }
-.page-location .property-card:last-child .property-card-icon svg { color: var(--gold-light); }
 .page-location .properties-grid + p { font-size: .87rem; }
-.page-location main > .section-padding.bg-off-white { border-top: 1px solid var(--interior-line); border-bottom: 1px solid var(--interior-line); }
 .page-location main > .section-padding.bg-off-white .section-subtitle { font-size: clamp(1.05rem, 1.65vw, 1.35rem); line-height: 1.85; color: #414e60; }
 .page-location main > .section-padding.bg-off-white > .container > .text-center:last-child { margin-bottom: 0; }
 .page-location .nearby-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--interior-line); }
@@ -3910,6 +3903,16 @@ h2 { font-size: clamp(2rem, 3.7vw, 3.35rem); line-height: 1.16; }
   .page-pricing .pricing-cards {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, max(13rem, calc((100% - 16px) / 2))), 1fr));
   }
+}
+
+/* One shared gap keeps related information together on these continuous ivory pages. */
+:is(.page-location, .page-pricing) main > .section-padding { padding-block: clamp(64px, 6vw, 88px); }
+:is(.page-location, .page-pricing) main > .section-padding + .section-padding { padding-top: 0; }
+:is(.page-location, .page-pricing) main > .section-padding > .container > :last-child { margin-bottom: 0; }
+@media (max-width: 768px) {
+  :is(.page-location, .page-pricing) main > .section-padding { padding-block: 56px; }
+  :is(.page-location, .page-pricing) main > .section-padding .section-label { margin-bottom: 14px; }
+  :is(.page-location, .page-pricing) main > .section-padding > .container > .text-center:not(:last-child) { margin-bottom: 28px; }
 }
 
 /* Booking page: append after the shared stylesheet. No content or form behavior changes. */
