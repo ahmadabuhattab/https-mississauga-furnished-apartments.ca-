@@ -3509,57 +3509,70 @@ h2 { font-size: clamp(2rem, 3.7vw, 3.35rem); line-height: 1.16; }
   .page-home #faq .section-subtitle { margin-bottom: 16px; }
 }
 
-/* Give existing review images one frame without overlaps or empty crops. */
-  .page-home .about-images {
-    display: grid;
-    grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: #fffefa;
-    border: 1px solid #ded9cf;
-    border-radius: 8px;
-  }
-  .page-home .about-img-main {
-    grid-column: 1 / -1;
-    border: 0;
-    border-radius: 4px;
-    box-shadow: none;
-  }
-  .page-home .about-img-secondary {
-    grid-column: 2;
-    grid-row: 2;
-    position: static;
-    width: 100%;
-    max-width: 300px;
-    justify-self: end;
-    height: auto;
-    aspect-ratio: auto;
-    margin: 0;
-    border: 0;
-    border-radius: 4px;
-    box-shadow: none;
-  }
-  .page-home .about-img-secondary:last-child { grid-column: 1 / -1; justify-self: center; }
-  .page-home .about-images img { display: block; height: auto; }
-  .page-home .about-img-main img { aspect-ratio: auto 7 / 5; }
-  .page-home .about-img-secondary img { aspect-ratio: auto 1; }
-  .page-home .about-images--wide .about-img-main img { aspect-ratio: auto 25 / 9; }
-  .page-home .about-images--wide .about-img-secondary img { aspect-ratio: auto 15 / 8; }
-  .page-home .about-experience-badge {
-    grid-column: 1;
-    grid-row: 2;
-    position: static;
-    width: 100%;
-    height: auto;
-    min-width: 0;
-    padding: 12px 4px;
-    background: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  .page-home .about-experience-badge .number { font-size: 2rem; color: #8c722d; }
-  .page-home .about-experience-badge .text { font-size: .7rem; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+/* Preserve complete review screenshots and let visitors open the originals. */
+.page-home .about-grid { align-items: start; }
+.page-home .about-images {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+.page-home .review-image-link {
+  display: block;
+  position: static;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  aspect-ratio: auto;
+  margin: 0;
+  padding: 12px;
+  color: var(--navy);
+  background: #fffefa;
+  border: 1px solid #ded9cf;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px #0b1d3a05;
+  transition: border-color .18s;
+}
+.page-home .review-image-link:hover { border-color: #b9a15f; }
+.page-home .review-image-link:focus-visible { outline: 2px solid #8c722d; outline-offset: 4px; }
+.page-home .review-image-link img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.review-image-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  font-size: .72rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: .02em;
+}
+.review-image-caption svg { flex: 0 0 16px; color: #8c722d; }
+.page-home .about-experience-badge {
+  position: static;
+  flex-direction: row;
+  gap: 14px;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  padding: 16px;
+  background: #efeadd;
+  border: 1px solid #ded5bf;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.page-home .about-experience-badge .number { font-size: 2rem; color: #8c722d; }
+.page-home .about-experience-badge .text { width: auto; margin: 0; text-align: left; font-size: .75rem; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
 
 /* Premium interior pages. Append after the shared/global styles.
    Requires body.page-facilities / page-location / page-gallery / page-pricing.
