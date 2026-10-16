@@ -49,4 +49,8 @@
     <loc>https://mississauga-furnished-apartments.ca/booking</loc>
     <image:image><image:loc>https://mississauga-furnished-apartments.ca/images/facility-bg-mp86rRVwpPU0ooEl-w1920-f03b5ac982.webp</image:loc></image:image>
   </url>
+  <url>
+    <loc>https://mississauga-furnished-apartments.ca/booking-details</loc>
+    <image:image><image:loc>https://mississauga-furnished-apartments.ca/images/facility-bg-mp86rRVwpPU0ooEl-w1920-f03b5ac982.webp</image:loc></image:image>
+  </url>
 </urlset>
